@@ -13,6 +13,19 @@
 
     <link rel="stylesheet" href="style.css" />
 
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""
+    />
+    <script
+      defer
+      src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+      crossorigin=""
+    ></script>
+
     <script defer src="script.js"></script>
     <title>mapty // Map your workouts</title>
   </head>
@@ -40,14 +53,14 @@
               placeholder="min"
             />
           </div>
-          <div class="form__row">
+          <div class="form__row cadence">
             <label class="form__label">Cadence</label>
             <input
               class="form__input form__input--cadence"
               placeholder="step/min"
             />
           </div>
-          <div class="form__row form__row--hidden">
+          <div class="form__row elevation form__row--hidden">
             <label class="form__label">Elev Gain</label>
             <input
               class="form__input form__input--elevation"
