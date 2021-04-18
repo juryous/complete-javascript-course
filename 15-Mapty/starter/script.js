@@ -85,11 +85,6 @@ class App {
     form.addEventListener('submit', this.#newWorkoutHandler);
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
-    // Challenges
-    this.workouts = containerWorkouts.querySelectorAll('.workout');
-    this._editHandler();
-    this._deleteHandler();
-    // console.log(this.workouts);
   }
 
   _getPosition() {
@@ -271,7 +266,7 @@ class App {
           inputCadence.value = workout.cadence;
           inputElevation.value = workout.elevationGain;
           // Update workout data on form submission
-          const editHandler = function (e) {
+          const updateWorkout = function (e) {
             e.preventDefault();
             workout.type = inputType.value;
             workout.distance = +inputDistance.value;
@@ -290,36 +285,13 @@ class App {
             inputDistance.value = inputCadence.value = inputDuration.value = inputElevation.value =
               '';
             form.classList.add('hidden');
-            form.removeEventListener('submit', editHandler);
+            form.removeEventListener('submit', updateWorkout);
             form.addEventListener('submit', this.#newWorkoutHandler);
             this._setLocalStorage();
-            console.log(this.workouts);
+            // console.log(this.workouts);
           }.bind(this);
 
-          form.addEventListener('submit', editHandler);
-        }.bind(this)
-      );
-    });
-  }
-
-  _deleteHandler() {
-    this.workouts.forEach(workEl => {
-      const btn = workEl.querySelector('.workout__delete-btn');
-      btn.addEventListener(
-        'click',
-        function () {
-          const workout = this.#workouts.find(
-            work => work.id === workEl.dataset.id
-          );
-          const index = this.#workouts.findIndex(el => el.id === workout.id);
-          workEl.remove();
-          this.#workouts.splice(index, 1);
-          // Remove marker
-          const marker = this.#markers.find(
-            e => e._leaflet_id === workout.markerId
-          );
-          marker.remove();
-          this._setLocalStorage();
+          form.addEventListener('submit', updateWorkout);
         }.bind(this)
       );
     });
@@ -393,10 +365,30 @@ class App {
     );
 
     if (!workout) return;
+
+    // Move workout into view
     this.#map.setView(workout.coords, this.#mapZoomLevel, {
       animate: true,
       pan: { duration: 1 },
     });
+
+    // Challenge edit
+    if (e.target.classList.contains('workout__edit-btn')) {
+      console.log(`Edit ${workoutEl.dataset.id}`);
+    }
+
+    // Challenge delete
+    if (e.target.classList.contains('workout__delete-btn')) {
+      const index = this.#workouts.findIndex(el => el.id === workout.id);
+      workoutEl.remove();
+      this.#workouts.splice(index, 1);
+      // Remove marker
+      const marker = this.#markers.find(
+        e => e._leaflet_id === workout.markerId
+      );
+      marker.remove();
+      this._setLocalStorage();
+    }
 
     // Using public interface
     // workout.click();
