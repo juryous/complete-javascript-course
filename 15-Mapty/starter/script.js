@@ -388,6 +388,7 @@ class App {
         this._setLocalStorage();
 
         editForm.classList.add('hidden');
+        workoutEl.style.marginBottom = '1.75rem';
       };
 
       editForm.addEventListener('submit', updateWorkout.bind(this));
@@ -418,6 +419,7 @@ class App {
     const data = JSON.parse(localStorage.getItem('workouts'));
 
     if (!data) return;
+    console.log(data);
 
     this.#workouts = data;
 
