@@ -56,8 +56,6 @@ class Cycling extends Workout {
   }
 }
 
-const run = new Running();
-
 ///////////////////////////////////////////
 // APLICATION ARCHITECTURE
 const form = document.querySelector('.form');
@@ -88,7 +86,6 @@ class App {
       'click',
       this._handleWorkoutClick.bind(this)
     );
-    this.test = [];
   }
 
   _getPosition() {
@@ -273,13 +270,6 @@ class App {
     form.insertAdjacentHTML('afterend', html);
   }
 
-  _editWorkout(...params) {
-    // params[0].preventDefault();
-
-    const workoutEl = params[1];
-    console.log(this);
-  }
-
   _createEditForm(workout, element) {
     let html = `
     <form class="form form--edit">
@@ -408,7 +398,7 @@ class App {
     }
 
     // Using public interface
-    // workout.click();
+    workout.click();
   }
 
   _setLocalStorage() {
@@ -419,9 +409,36 @@ class App {
     const data = JSON.parse(localStorage.getItem('workouts'));
 
     if (!data) return;
-    console.log(data);
 
-    this.#workouts = data;
+    const newData = data.map((workout, i, arr) => {
+      if (workout.type === 'running') {
+        const newWorkout = new Running(
+          workout.coords,
+          workout.distance,
+          workout.duration,
+          workout.cadence
+        );
+        newWorkout.date = workout.date;
+        newWorkout.id = workout.id;
+        newWorkout.description = workout.description;
+        return newWorkout;
+      }
+      if (workout.type === 'cycling') {
+        const newWorkout = new Cycling(
+          workout.coords,
+          workout.distance,
+          workout.duration,
+          workout.elevationGain
+        );
+        newWorkout.date = workout.date;
+        newWorkout.id = workout.id;
+        newWorkout.description = workout.description;
+        return newWorkout;
+      }
+    });
+
+    // this.#workouts = data;
+    this.#workouts = newData;
 
     this.#workouts.forEach(work => {
       this._renderWorkout(work);
