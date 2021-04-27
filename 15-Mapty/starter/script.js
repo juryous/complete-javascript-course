@@ -86,6 +86,7 @@ class App {
       'click',
       this._handleWorkoutClick.bind(this)
     );
+    console.log(this.#workouts);
   }
 
   _getPosition() {
@@ -421,6 +422,7 @@ class App {
         newWorkout.date = workout.date;
         newWorkout.id = workout.id;
         newWorkout.description = workout.description;
+        newWorkout.clicks = workout.clicks;
         return newWorkout;
       }
       if (workout.type === 'cycling') {
@@ -433,6 +435,7 @@ class App {
         newWorkout.date = workout.date;
         newWorkout.id = workout.id;
         newWorkout.description = workout.description;
+        newWorkout.clicks = workout.clicks;
         return newWorkout;
       }
     });
@@ -452,73 +455,3 @@ class App {
 }
 
 const app = new App();
-
-// const formCadence = form.querySelector('.cadence');
-// const formElevation = form.querySelector('.elevation');
-
-// const distanceDOM = workoutEl.querySelector('.workout__distance');
-// const durationDOM = workoutEl.querySelector('.workout__duration');
-// const cadenceDOM = workoutEl.querySelector('.workout__cadence');
-// const elevationDOM = workoutEl.querySelector('.workout__elevation');
-
-// const editWorkout = function (event) {
-//   event.preventDefault();
-
-//   // Update workout data and UI
-//   distanceDOM.textContent = inputDistance.value;
-//   durationDOM.textContent = inputDuration.value;
-
-//   workout.distance = inputDistance.value;
-//   workout.duration = inputDuration.value;
-
-//   if (workout.type === 'running') {
-//     cadenceDOM.textContent = inputCadence.value;
-//     workout.cadence = inputCadence.value;
-//   }
-//   if (workout.type === 'cycling') {
-//     elevationDOM.textContent = inputElevation.value;
-//     workout.elevationGain = inputElevation.value;
-//   }
-
-//   // Update local storage
-//   // this._setLocalStorage();
-
-//   // Clear inputs, hide form
-//   inputDistance.value = inputCadence.value = inputDuration.value = inputElevation.value =
-//     '';
-//   form.classList.add('hidden');
-//   // Switch back event listeners
-//   form.removeEventListener('submit', editWorkout);
-//   form.addEventListener('submit', this.#newWorkoutHandler);
-//   form.classList.remove('editing');
-
-//   console.log(`Updated ${workout.id}`);
-// };
-
-// // Show form, switch event listeners
-// form.classList.remove('hidden');
-// form.removeEventListener('submit', this.#newWorkoutHandler);
-
-// if (!form.classList.contains('editing')) {
-//   form.addEventListener('submit', editWorkout.bind(this), {
-//     once: true,
-//   });
-//   form.classList.add('editing');
-// }
-
-// // Display workout data in the form
-// inputType.disabled = true;
-// if (workout.type === 'running') {
-//   formCadence.classList.remove('form__row--hidden');
-//   formElevation.classList.add('form__row--hidden');
-//   inputCadence.value = workout.cadence;
-// }
-// if (workout.type === 'cycling') {
-//   formElevation.classList.remove('form__row--hidden');
-//   formCadence.classList.add('form__row--hidden');
-//   inputElevation.value = workout.elevationGain;
-// }
-
-// inputType.value = workout.type;
-// inputDistance.value = workout.distance;
-// inputDuration.value = workout.duration;
