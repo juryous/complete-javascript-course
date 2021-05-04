@@ -65,6 +65,10 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+const confDialog = document.querySelector('.conf-dialog');
+const overlay = document.querySelector('.overlay');
+const dialogYesBtn = document.querySelector('.conf-btn--yes');
+const dialogNoBtn = document.querySelector('.conf-btn--no');
 
 class App {
   #map;
@@ -73,6 +77,8 @@ class App {
   #mapEvent;
   #workouts = [];
   #newWorkoutHandler = this._newWorkout.bind(this);
+  #deleteHandler = this._deleteWorkout.bind(this);
+  #currentWorkoutEl;
 
   constructor() {
     // Get user's position
@@ -86,7 +92,18 @@ class App {
       'click',
       this._handleWorkoutClick.bind(this)
     );
-    console.log(this.#workouts);
+    dialogNoBtn.addEventListener('click', this._closeDialog);
+    overlay.addEventListener('click', this._closeDialog);
+  }
+
+  _openDialog() {
+    confDialog.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+  }
+
+  _closeDialog() {
+    confDialog.classList.add('hidden');
+    overlay.classList.add('hidden');
   }
 
   _getPosition() {
@@ -219,8 +236,8 @@ class App {
     <li class="workout workout--${workout.type}" data-id="${workout.id}">
       <h2 class="workout__title">${workout.description}</h2>
       <div class="workout__btns">
-      <button class="workout__edit-btn workout__btn">Edit</button>
-      <button class="workout__delete-btn workout__btn">Remove</button>
+      <i class="far fa-edit workout__btn workout__edit-btn"></i>
+      <i class="far fa-trash-alt workout__btn workout__delete-btn"></i>
       </div>
       <div class="workout__details">
       <span class="workout__icon">${
@@ -319,7 +336,22 @@ class App {
   </form>`;
 
     element.insertAdjacentHTML('afterend', html);
-    element.style.marginBottom = '0';
+  }
+
+  _deleteWorkout() {
+    const workout = this.#workouts.find(
+      work => work.id === this.#currentWorkoutEl.dataset.id
+    );
+    if (!workout) return;
+
+    const index = this.#workouts.findIndex(el => el.id === workout.id);
+    this.#currentWorkoutEl.remove();
+    this.#workouts.splice(index, 1);
+    // Remove marker
+    const marker = this.#markers.find(e => e._leaflet_id === workout.markerId);
+    marker.remove();
+    this._closeDialog();
+    this._setLocalStorage();
   }
 
   _handleWorkoutClick(e) {
@@ -332,6 +364,7 @@ class App {
     );
 
     if (!workout) return;
+    this.#currentWorkoutEl = workoutEl;
 
     // Move workout into view
     this.#map.setView(workout.coords, this.#mapZoomLevel, {
@@ -341,9 +374,12 @@ class App {
 
     // Edit workout
     if (e.target.classList.contains('workout__edit-btn')) {
+      const workouts = containerWorkouts.querySelectorAll('.workout');
       containerWorkouts.querySelector('.form--edit').remove();
       this._createEditForm(workout, workoutEl);
-      workoutEl.style.marginTop = '1.75rem';
+
+      workouts.forEach(el => el.classList.remove('edit'));
+      workoutEl.classList.add('edit');
 
       const editForm = containerWorkouts.querySelector('.form--edit');
 
@@ -378,8 +414,8 @@ class App {
 
         this._setLocalStorage();
 
-        editForm.classList.add('hidden');
-        workoutEl.style.marginBottom = '1.75rem';
+        editForm.style.display = 'none';
+        workoutEl.classList.remove('edit');
       };
 
       editForm.addEventListener('submit', updateWorkout.bind(this));
@@ -387,17 +423,11 @@ class App {
 
     // Delete workout
     if (e.target.classList.contains('workout__delete-btn')) {
-      const index = this.#workouts.findIndex(el => el.id === workout.id);
-      workoutEl.remove();
-      this.#workouts.splice(index, 1);
-      // Remove marker
-      const marker = this.#markers.find(
-        e => e._leaflet_id === workout.markerId
-      );
-      marker.remove();
-      this._setLocalStorage();
-    }
+      this._openDialog();
 
+      dialogYesBtn.removeEventListener('click', this.#deleteHandler);
+      dialogYesBtn.addEventListener('click', this.#deleteHandler);
+    }
     // Using public interface
     workout.click();
   }
