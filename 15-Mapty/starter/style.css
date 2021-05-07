@@ -85,7 +85,7 @@ a:visited {
   border-left: 5px solid var(--color-brand--1);
 }
 
-.workout.edit {
+.workout.editing {
   border-radius: 5px 5px 0 0;
   margin-bottom: 0;
 }
@@ -147,7 +147,7 @@ a:visited {
   transition: all 0.5s, transform 1ms;
 }
 
-.form--edit {
+.form.editing {
   border-radius: 0 0 5px 5px;
 }
 
