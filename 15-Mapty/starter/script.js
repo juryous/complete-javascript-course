@@ -86,6 +86,7 @@ class App {
     // Get data from local storage
     this._getLocalStorage();
     // Attach event handlers
+    document.addEventListener('keydown', this._keyboardHandler.bind(this));
     form.addEventListener('submit', this.#newWorkoutHandler);
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener(
@@ -94,6 +95,22 @@ class App {
     );
     dialogNoBtn.addEventListener('click', this._closeDialog);
     overlay.addEventListener('click', this._closeDialog);
+  }
+
+  _keyboardHandler(e) {
+    if (e.key === 'Escape' && !form.classList.contains('hidden'))
+      this._hideForm();
+    if (!this.#currentWorkout) return;
+    const [workoutEl] = this.#currentWorkout;
+    if (form.classList.contains('editing')) {
+      workoutEl.classList.remove('editing');
+      containerWorkouts.insertAdjacentElement('afterbegin', form);
+      inputType.disabled = false;
+
+      form.classList.remove('editing');
+      form.removeEventListener('submit', this.#editWorkoutHandler);
+      form.addEventListener('submit', this.#newWorkoutHandler);
+    }
   }
 
   _openDialog() {
@@ -354,6 +371,7 @@ class App {
     workoutEl.classList.remove('editing');
 
     containerWorkouts.insertAdjacentElement('afterbegin', form);
+    form.classList.remove('editing');
     form.removeEventListener('submit', this.#editWorkoutHandler);
     form.addEventListener('submit', this.#newWorkoutHandler);
   }
