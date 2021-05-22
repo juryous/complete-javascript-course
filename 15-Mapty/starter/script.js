@@ -11,13 +11,32 @@ class Workout {
     this.duration = duration; // in min
   }
 
-  _setDescription() {
+  async _getLocationData() {
+    try {
+      const [lat, lng] = this.coords;
+      const response = await fetch(
+        `https://geocode.xyz/${lat},${lng}?geoit=json`
+      );
+
+      if (!response.ok)
+        throw new Error(`Request limit exceeded. (${response.status})`);
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+
+  async _setDescription() {
     // prettier-ignore
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
     this.description = `${this.type[0].toUpperCase()}${this.type.slice(1)} on ${
       months[this.date.getMonth()]
     } ${this.date.getDate()}`;
+
+    const data = await this._getLocationData();
+    this.location = `in ${data.city}, ${data.prov}`;
   }
 
   click() {
@@ -32,7 +51,6 @@ class Running extends Workout {
     super(coords, distance, duration);
     this.cadence = cadence;
     this.calcPace();
-    this._setDescription();
   }
 
   calcPace() {
@@ -47,7 +65,6 @@ class Cycling extends Workout {
     super(coords, distance, duration);
     this.elevationGain = elevationGain;
     this.calcSpeed();
-    this._setDescription();
   }
 
   calcSpeed() {
@@ -76,8 +93,8 @@ class App {
   #mapZoomLevel = 13;
   #mapEvent;
   #workouts = [];
-  #newWorkoutHandler = this.#newWorkout.bind(this);
-  #editWorkoutHandler = this.#editWorkout.bind(this);
+  #newWorkoutHandler = this._newWorkout.bind(this);
+  #editWorkoutHandler = this._editWorkout.bind(this);
   #currentWorkout;
 
   constructor() {
@@ -98,18 +115,19 @@ class App {
   }
 
   _keyboardHandler(e) {
-    if (e.key === 'Escape' && !form.classList.contains('hidden'))
+    if (e.key === 'Escape' && !form.classList.contains('hidden')) {
       this._hideForm();
-    if (!this.#currentWorkout) return;
-    const [workoutEl] = this.#currentWorkout;
-    if (form.classList.contains('editing')) {
-      workoutEl.classList.remove('editing');
-      containerWorkouts.insertAdjacentElement('afterbegin', form);
-      inputType.disabled = false;
+      if (!this.#currentWorkout) return;
+      const [workoutEl] = this.#currentWorkout;
+      if (form.classList.contains('editing')) {
+        workoutEl.classList.remove('editing');
+        containerWorkouts.insertAdjacentElement('afterbegin', form);
+        inputType.disabled = false;
 
-      form.classList.remove('editing');
-      form.removeEventListener('submit', this.#editWorkoutHandler);
-      form.addEventListener('submit', this.#newWorkoutHandler);
+        form.classList.remove('editing');
+        form.removeEventListener('submit', this.#editWorkoutHandler);
+        form.addEventListener('submit', this.#newWorkoutHandler);
+      }
     }
   }
 
@@ -161,8 +179,11 @@ class App {
 
   _hideForm() {
     // Clear inputs
-    inputDistance.value = inputCadence.value = inputDuration.value = inputElevation.value =
-      '';
+    inputDistance.value =
+      inputCadence.value =
+      inputDuration.value =
+      inputElevation.value =
+        '';
 
     form.style.display = 'none';
     form.classList.add('hidden');
@@ -174,7 +195,7 @@ class App {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
   }
 
-  #newWorkout(e) {
+  async _newWorkout(e) {
     const validInputs = (...inputs) =>
       inputs.every(inp => Number.isFinite(inp));
 
@@ -211,15 +232,17 @@ class App {
         return alert('Inputs have to be positive numbers!');
       workout = new Cycling([lat, lng], distance, duration, elevation);
     }
+    // Set description (date, location)
+    await workout._setDescription();
 
     // Add new object to workout array
     this.#workouts.push(workout);
 
-    // Render workout on the map as a marker
-    this._renderWorkoutMarker(workout);
-
     // Render workout on the list
     this._renderWorkout(workout);
+
+    // Render workout on the map as a marker
+    this._renderWorkoutMarker(workout);
 
     // Hide the form + clear input fields
     this._hideForm();
@@ -251,7 +274,7 @@ class App {
   _renderWorkout(workout) {
     let html = `
     <li class="workout workout--${workout.type}" data-id="${workout.id}">
-      <h2 class="workout__title">${workout.description}</h2>
+      <h2 class="workout__title">${workout.description} ${workout.location}</h2>
       <div class="workout__btns">
       <i class="far fa-edit workout__btn workout__edit-btn"></i>
       <i class="far fa-trash-alt workout__btn workout__delete-btn"></i>
@@ -309,7 +332,7 @@ class App {
     form.insertAdjacentHTML('afterend', html);
   }
 
-  #fillFormData(workout) {
+  _fillFormData(workout) {
     inputType.disabled = true;
     inputType.value = workout.type;
     inputDistance.value = workout.distance;
@@ -332,7 +355,7 @@ class App {
     }
   }
 
-  #updateWorkoutUI(element, workout) {
+  _updateWorkoutUI(element, workout) {
     const distance = element.querySelector('.workout__distance');
     const duration = element.querySelector('.workout__duration');
     const pace = element.querySelector('.workout__pace');
@@ -352,7 +375,7 @@ class App {
     }
   }
 
-  #editWorkout(e) {
+  _editWorkout(e) {
     e.preventDefault();
     const [workoutEl, workout] = this.#currentWorkout;
 
@@ -365,7 +388,7 @@ class App {
     this._setLocalStorage();
 
     // Update workout UI
-    this.#updateWorkoutUI(workoutEl, workout);
+    this._updateWorkoutUI(workoutEl, workout);
 
     this._hideForm();
     workoutEl.classList.remove('editing');
@@ -376,7 +399,7 @@ class App {
     form.addEventListener('submit', this.#newWorkoutHandler);
   }
 
-  #deleteWorkout() {
+  _deleteWorkout() {
     const [workoutEl, workout] = this.#currentWorkout;
 
     // Remove workout
@@ -423,7 +446,7 @@ class App {
       workoutEl.classList.add('editing');
 
       // Show current workout data in the form
-      this.#fillFormData(workout);
+      this._fillFormData(workout);
 
       form.removeEventListener('submit', this.#editWorkoutHandler);
       form.addEventListener('submit', this.#editWorkoutHandler);
@@ -433,8 +456,8 @@ class App {
     if (e.target.classList.contains('workout__delete-btn')) {
       this._openDialog();
 
-      dialogYesBtn.removeEventListener('click', this.#deleteWorkout);
-      dialogYesBtn.addEventListener('click', this.#deleteWorkout.bind(this), {
+      dialogYesBtn.removeEventListener('click', this._deleteWorkout);
+      dialogYesBtn.addEventListener('click', this._deleteWorkout.bind(this), {
         once: true,
       });
     }
@@ -463,6 +486,7 @@ class App {
         newWorkout.date = workout.date;
         newWorkout.id = workout.id;
         newWorkout.description = workout.description;
+        newWorkout.location = workout.location;
         newWorkout.clicks = workout.clicks;
         return newWorkout;
       }
@@ -476,12 +500,12 @@ class App {
         newWorkout.date = workout.date;
         newWorkout.id = workout.id;
         newWorkout.description = workout.description;
+        newWorkout.location = workout.location;
         newWorkout.clicks = workout.clicks;
         return newWorkout;
       }
     });
 
-    // this.#workouts = data;
     this.#workouts = newData;
 
     this.#workouts.forEach(work => {
