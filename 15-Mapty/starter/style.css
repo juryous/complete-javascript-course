@@ -287,6 +287,19 @@ a:visited {
   transition: opacity 0.3s 0s, visibility 0s 0.3s;
 }
 
+.btn-remove-all {
+  cursor: pointer;
+  margin-inline: auto;
+  margin-bottom: 1rem;
+  padding: 0.5em 2em;
+  font-family: inherit;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--color-light--2);
+  color: var(--color-dark--1);
+}
+
 /* MAP */
 #map {
   flex: 1;

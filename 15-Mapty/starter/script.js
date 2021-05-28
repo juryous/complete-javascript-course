@@ -86,6 +86,7 @@ const confDialog = document.querySelector('.conf-dialog');
 const overlay = document.querySelector('.overlay');
 const dialogYesBtn = document.querySelector('.conf-btn--yes');
 const dialogNoBtn = document.querySelector('.conf-btn--no');
+const removeAllBtn = document.querySelector('.btn-remove-all');
 
 class App {
   #map;
@@ -95,6 +96,7 @@ class App {
   #workouts = [];
   #newWorkoutHandler = this._newWorkout.bind(this);
   #editWorkoutHandler = this._editWorkout.bind(this);
+  #deleteWorkoutHandler = this._deleteWorkout.bind(this);
   #currentWorkout;
 
   constructor() {
@@ -102,6 +104,8 @@ class App {
     this._getPosition();
     // Get data from local storage
     this._getLocalStorage();
+    // Display / hide remove all button
+    this._toggleRemoveAllButton();
     // Attach event handlers
     document.addEventListener('keydown', this._keyboardHandler.bind(this));
     form.addEventListener('submit', this.#newWorkoutHandler);
@@ -112,6 +116,14 @@ class App {
     );
     dialogNoBtn.addEventListener('click', this._closeDialog);
     overlay.addEventListener('click', this._closeDialog);
+    removeAllBtn.addEventListener('click', this._deleteAllWorkouts.bind(this));
+  }
+
+  _toggleRemoveAllButton() {
+    const workouts = containerWorkouts.querySelectorAll('.workout');
+    workouts.length === 0
+      ? (removeAllBtn.style.display = 'none')
+      : (removeAllBtn.style.display = 'block');
   }
 
   _keyboardHandler(e) {
@@ -131,7 +143,8 @@ class App {
     }
   }
 
-  _openDialog() {
+  _openDialog(msg) {
+    confDialog.querySelector('.dialog-msg').textContent = msg;
     confDialog.classList.remove('hidden');
     overlay.classList.remove('hidden');
   }
@@ -246,6 +259,9 @@ class App {
 
     // Hide the form + clear input fields
     this._hideForm();
+
+    // Display remove all button
+    this._toggleRemoveAllButton();
 
     // Set local storage to all workouts
     this._setLocalStorage();
@@ -412,7 +428,28 @@ class App {
     marker.remove();
     this._closeDialog();
 
+    this._toggleRemoveAllButton();
+
     this._setLocalStorage();
+  }
+
+  _deleteAllWorkouts() {
+    const message = 'Are you sure you want to delete ALL workouts?';
+    this._openDialog(message);
+    dialogYesBtn.removeEventListener('click', this.#deleteWorkoutHandler);
+
+    const deleteWorkouts = function () {
+      containerWorkouts.querySelectorAll('.workout').forEach(el => el.remove());
+      this.#markers.forEach(marker => marker.remove());
+      this.#markers = [];
+      this.#workouts = [];
+      this._setLocalStorage();
+      this._closeDialog();
+      this._toggleRemoveAllButton();
+      dialogYesBtn.removeEventListener('click', deleteWorkouts);
+    };
+
+    dialogYesBtn.addEventListener('click', deleteWorkouts.bind(this));
   }
 
   _handleWorkoutClick(e) {
@@ -454,10 +491,11 @@ class App {
 
     // Delete workout
     if (e.target.classList.contains('workout__delete-btn')) {
-      this._openDialog();
+      const message = 'Are you sure you want to delete this workout?';
+      this._openDialog(message);
 
-      dialogYesBtn.removeEventListener('click', this._deleteWorkout);
-      dialogYesBtn.addEventListener('click', this._deleteWorkout.bind(this), {
+      dialogYesBtn.removeEventListener('click', this.#deleteWorkoutHandler);
+      dialogYesBtn.addEventListener('click', this.#deleteWorkoutHandler, {
         once: true,
       });
     }
